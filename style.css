@@ -389,13 +389,13 @@ body {
 
 .act-match { background: var(--pink); }
 .act-ghost { background: var(--green); }
-.act-swipe { background: var(--grey); }
+.act-compliment { background: #f0894c; }
 .act-run   { background: var(--blue); }
 
 /* MATCH glow ramps up as she keeps dodging it */
-.act-match.glow-1 { animation: match-glow 1.6s ease-in-out infinite; }
-.act-match.glow-2 { animation: match-glow .9s ease-in-out infinite; transform: scale(1.04); }
-.act-match.glow-3 { animation: match-glow .6s ease-in-out infinite; transform: scale(1.08); }
+.act-match.glow-1, .act-compliment.glow-1 { animation: match-glow 1.6s ease-in-out infinite; }
+.act-match.glow-2, .act-compliment.glow-2 { animation: match-glow .9s ease-in-out infinite; transform: scale(1.04); }
+.act-match.glow-3, .act-compliment.glow-3 { animation: match-glow .6s ease-in-out infinite; transform: scale(1.08); }
 @keyframes match-glow {
   0%,100% { box-shadow: 0 4px 0 rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35), 0 0 0 rgba(255,120,170,0); }
   50%     { box-shadow: 0 4px 0 rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.35), 0 0 18px 3px rgba(255,120,170,.9); }

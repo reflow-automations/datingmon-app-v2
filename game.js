@@ -72,6 +72,7 @@
   const soundToggle  = $("#sound-toggle");
   const actionBtns   = [...document.querySelectorAll(".btn--action")];
   const btnMatch     = $(".act-match");
+  const btnCompliment = $(".act-compliment");
 
   // inject the dynamic name
   $("#player-name-box").textContent = NAME;
@@ -344,16 +345,16 @@
   /* ---------- Menu + escalating "pressure" ---------- */
   let menuLocked = true;
   let wrongCount = 0;
-  let matchHits = 0;             // MATCH lands the 1st hit, then FLIRT x2 to win
+  let matchHits = 0;             // FLIRT/COMPLIMENT hits landed; 3 in any mix wins
   const MATCH_TOTAL = 3;
-  const usedWrong = new Set();   // which of GHOST / RUN / SWIPE LEFT she has tried
-  let nudgeIdx = 0;              // cycles the "pick the pink button" hints
+  const usedWrong = new Set();   // which negatives (OVERTHINK / COLD FEET) she tried
+  let nudgeIdx = 0;              // cycles the positive-nudge hints
 
-  // The wrong buttons only turn timid (and MATCH ramps up) once she's clearly
-  // stalling: after all three wrong moves have been tried, OR after 3 moves.
+  // The wrong buttons only turn timid (and the positives ramp up) once she's
+  // clearly stalling: after both wrong moves are tried, OR after 3 moves.
   function pressureActive() {
     return wrongCount >= 3 ||
-      (usedWrong.has("ghost") && usedWrong.has("run") && usedWrong.has("swipe"));
+      (usedWrong.has("ghost") && usedWrong.has("run"));
   }
 
   function showMenu() {
@@ -373,14 +374,18 @@
     usedWrong.clear();
     btnMatch.textContent = "FLIRT";
     actionBtns.forEach((b) => b.classList.remove("timid", "timid-2", "timid-3"));
-    btnMatch.classList.remove("glow-2", "glow-3");
-    btnMatch.classList.add("glow-1");
+    [btnMatch, btnCompliment].forEach((b) => {
+      b.classList.remove("glow-2", "glow-3");
+      b.classList.add("glow-1");
+    });
   }
   function applyPressure() {
     const active = pressureActive();
-    btnMatch.classList.toggle("glow-2", active);
-    btnMatch.classList.toggle("glow-3", active && wrongCount >= 5);
-    [".act-ghost", ".act-run", ".act-swipe"].forEach((sel) => {
+    [btnMatch, btnCompliment].forEach((b) => {
+      b.classList.toggle("glow-2", active);
+      b.classList.toggle("glow-3", active && wrongCount >= 5);
+    });
+    [".act-ghost", ".act-run"].forEach((sel) => {
       const b = $(sel);
       b.classList.toggle("timid", active);
       b.classList.toggle("timid-2", active && wrongCount >= 5);
@@ -394,9 +399,10 @@
   });
 
   /* ---------- Dialogue banks ----------
-     Turn-based, Pokémon-style. Her OVERTHINK / COLD FEET / CANCEL do NOTHING
-     to ROGIER (his HP never moves); then ROGIER answers with a charming
-     "move" that chips away at HER nerves (HP). Banks cycle to stay funny.  */
+     Turn-based, Pokémon-style. Her OVERTHINK / COLD FEET do NOTHING to ROGIER
+     (his HP never moves); then ROGIER answers with a charming "move" that
+     chips away at HER nerves (HP). FLIRT and COMPLIMENT are the two winning
+     moves: each lands a real hit. Banks cycle to stay funny.               */
   const ghostLines = [   // button: OVERTHINK
     [NAME + " started OVERTHINKING it... but it had no effect on " + FOE + "!",
      "Wild " + FOE + " used CONFIDENT SMILE! It's super effective! 😏"],
@@ -417,31 +423,28 @@
     [NAME + "'s nerves flared up... destiny disabled the exit!",
      "Wild " + FOE + " used WARM LAUGH! " + NAME + " melts a little. 💘"],
   ];
-  const swipeLines = [   // button: CANCEL — ROGIER answers with a reason to keep the date
-    [NAME + " reached for CANCEL... but " + FOE + " had a reason ready!",
-     "Wild " + FOE + " used \"give it one hour, then leave whenever you want\"! Super effective! 💞"],
-    [NAME + " drafted a rain-check text...",
-     "Wild " + FOE + " used \"worst case: free drinks and a good laugh\"! Critical hit! 🍻"],
-    [NAME + "'s thumb hovered over cancel...",
-     "Wild " + FOE + " used \"" + CONFIG.day + " won't be the same without you\"! Super effective! 💘"],
-    [NAME + " considered flaking... but she's actually excited!",
-     "Wild " + FOE + " used \"me too 😊\"! Critical hit!"],
-  ];
   // Cycled so the player never sees the exact same nudge twice in a row.
-  // {btn} is swapped for the pink button's CURRENT label (MATCH, then FLIRT).
   const nudgeLines = [
-    "Psst... that glowing PINK button is right there. ♡",
-    "Hint: the nerves don't stand a chance. {btn} is the move. 💘",
-    "You already said yes. The pink one, {btn}. 😉",
-    "OVERTHINK, COLD FEET, CANCEL... none of it sticks. Try {btn}. ✨",
-    "Destiny is tapping its foot. Hit {btn}. " + CONFIG.day + "'s waiting. ♥",
-    "Spoiler: this only ends one way, and it's pink. 💕",
+    "Psst... the glowing buttons are the ones that work. ♡",
+    "Hint: the nerves don't stand a chance. Be sweet. 💘",
+    "You already said yes. FLIRT or COMPLIMENT, take your pick. 😉",
+    "OVERTHINK and COLD FEET get you nowhere. Go positive. ✨",
+    "Destiny is tapping its foot. Something nice. " + CONFIG.day + "'s waiting. ♥",
+    "Spoiler: this only ends one way, and it's good. 💕",
   ];
-  // The winning move is FLIRT all the way (they already matched — no "MATCH").
+  // The two winning moves (each press lands a real hit; 3 hits in any mix win).
   const flirtLines = [
     [NAME + " used FLIRT!", "It's a vibe! " + FOE + " is grinning... ♥"],
     [NAME + " used FLIRT!", "Smooth. " + CONFIG.day + " can't come soon enough! 💫"],
     [NAME + " used FLIRT!", "CRITICAL HIT! It's a date, no take-backs! ✨"],
+  ];
+  const complimentLines = [
+    [NAME + " used COMPLIMENT! \"You're actually really funny.\"",
+     "It's super effective! " + FOE + " short-circuits. 😳"],
+    [NAME + " used COMPLIMENT! \"...and weirdly cute, too.\"",
+     "Critical hit! " + FOE + "'s cool-guy act is gone. 💫"],
+    [NAME + " used COMPLIMENT! \"Okay, I'm actually excited for this.\"",
+     "CRITICAL HIT! It's a date, no take-backs! ✨"],
   ];
   const pick = (bank, i) => bank[Math.min(i, bank.length - 1)];
   const cyc  = (bank, i) => bank[((i % bank.length) + bank.length) % bank.length];
@@ -479,17 +482,17 @@
   }
 
   /* ---------- 4. Branches ----------
-     GHOST / RUN / SWIPE LEFT never win: they only drain HER HP and
-     loop back to the menu. Game over happens ONLY when HP hits 0.   */
+     OVERTHINK / COLD FEET never win: they only drain HER HP and loop back
+     to the menu. FLIRT and COMPLIMENT both win. Game over only at 0 HP.  */
   async function handleAction(action) {
     disableMenu();
-    if (action === "match") { sfx("select"); await branchFlirt(); return; }
+    if (action === "match")      { sfx("select"); await branchPositive(flirtLines);      return; }
+    if (action === "compliment") { sfx("select"); await branchPositive(complimentLines); return; }
     sfx("deny");
     usedWrong.add(action);
     // Balanced so ~6 of ROGIER's counter-moves finish her (999 HP / ~170 ≈ 6).
     if (action === "ghost") await wrongMove(cyc(ghostLines, wrongCount), rand(160, 185), false);
     if (action === "run")   await wrongMove(cyc(runLines,   wrongCount), rand(160, 185), false);
-    if (action === "swipe") await wrongMove(cyc(swipeLines, wrongCount), rand(180, 205), true);
   }
 
   async function wrongMove(lines, dmg, hard) {
@@ -518,11 +521,12 @@
     await fadeIn();
   }
 
-  // BRANCH MATCH/FLIRT — the one true path (3 hits: MATCH, then FLIRT x2)
-  async function branchFlirt() {
+  // BRANCH: a positive move (FLIRT or COMPLIMENT). Either lands a hit;
+  // 3 positive hits in any combination win.
+  async function branchPositive(bank) {
     matchHits++;
     const final = matchHits >= MATCH_TOTAL;
-    const lines = pick(flirtLines, matchHits - 1);
+    const lines = pick(bank, matchHits - 1);
 
     await say(lines[0]);
     // drain ROGIER's HP one third per hit
