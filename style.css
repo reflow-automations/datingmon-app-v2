@@ -276,7 +276,7 @@ body {
 }
 .sprite--player {
   bottom: 7%; left: 6%;
-  width: 22%; aspect-ratio: 407/1144;
+  width: 22%; aspect-ratio: 320/899;
   background-image: url("./trainer.png");
   animation: player-idle 3s ease-in-out infinite;
 }
