@@ -23,7 +23,7 @@
     time:       "2 PM",
     venue:      "O'Leary's",
     place:      "Mall of the Netherlands",
-    address:    "Kornoelje 114, Leidschendam",
+    address:    "Kornoelje 114, 2262 AX Leidschendam",
     activities: ["a game of pool", "a drink", "maybe the arcade"],
   };
   const FOE = "ROGIER";                    // the wild encounter (him)
@@ -89,7 +89,12 @@
     const box = $("#quest-objs");
     if (box) box.innerHTML = objs.map((o) => '<p class="questbox__obj">&gt; ' + o + "</p>").join("");
     const addr = $("#quest-addr");
-    if (addr) addr.textContent = "📍 " + CONFIG.address;
+    if (addr) {
+      const q = encodeURIComponent(CONFIG.venue + ", " + CONFIG.address);
+      addr.innerHTML = '<a class="questbox__maps" target="_blank" rel="noopener" ' +
+        'href="https://www.google.com/maps/search/?api=1&query=' + q + '">📍 ' +
+        CONFIG.address + ' ›</a>';
+    }
     const foot = $("#quest-footer");
     if (foot) foot.textContent = "[ SEE YOU " + CONFIG.day.toUpperCase() + "! ]";
   })();
@@ -366,7 +371,7 @@
     matchHits = 0;
     nudgeIdx = 0;
     usedWrong.clear();
-    btnMatch.textContent = "MATCH";
+    btnMatch.textContent = "FLIRT";
     actionBtns.forEach((b) => b.classList.remove("timid", "timid-2", "timid-3"));
     btnMatch.classList.remove("glow-2", "glow-3");
     btnMatch.classList.add("glow-1");
@@ -412,13 +417,13 @@
     [NAME + "'s nerves flared up... destiny disabled the exit!",
      "Wild " + FOE + " used WARM LAUGH! " + NAME + " melts a little. 💘"],
   ];
-  const swipeLines = [   // button: CANCEL
-    [NAME + " reached for CANCEL... " + FOE + " is unbothered. It bounced off!",
-     "Wild " + FOE + " used \"" + CONFIG.day + ", " + CONFIG.time + ", it's happening\"! Massive damage. 💞"],
-    [NAME + " drafted a rain-check text... and never sent it!",
-     "Wild " + FOE + " used PERFECT TIMING! A direct hit to the heart!"],
-    [NAME + " tried to CANCEL again... her thumb refused!",
-     "Wild " + FOE + " used DIMPLES! It's super effective!"],
+  const swipeLines = [   // button: CANCEL — ROGIER answers with a reason to keep the date
+    [NAME + " reached for CANCEL... but " + FOE + " had a reason ready!",
+     "Wild " + FOE + " used \"give it one hour, then leave whenever you want\"! Super effective! 💞"],
+    [NAME + " drafted a rain-check text...",
+     "Wild " + FOE + " used \"worst case: free drinks and a good laugh\"! Critical hit! 🍻"],
+    [NAME + "'s thumb hovered over cancel...",
+     "Wild " + FOE + " used \"" + CONFIG.day + " won't be the same without you\"! Super effective! 💘"],
     [NAME + " considered flaking... but she's actually excited!",
      "Wild " + FOE + " used \"me too 😊\"! Critical hit!"],
   ];
@@ -432,9 +437,9 @@
     "Destiny is tapping its foot. Hit {btn}. " + CONFIG.day + "'s waiting. ♥",
     "Spoiler: this only ends one way, and it's pink. 💕",
   ];
-  // MATCH lands the first hit, then it becomes FLIRT for the finishers
+  // The winning move is FLIRT all the way (they already matched — no "MATCH").
   const flirtLines = [
-    [NAME + " used MATCH!", "It's a vibe! " + FOE + " is grinning... ♥"],
+    [NAME + " used FLIRT!", "It's a vibe! " + FOE + " is grinning... ♥"],
     [NAME + " used FLIRT!", "Smooth. " + CONFIG.day + " can't come soon enough! 💫"],
     [NAME + " used FLIRT!", "CRITICAL HIT! It's a date, no take-backs! ✨"],
   ];
@@ -540,7 +545,6 @@
       await fadeIn();
       runLevelUp();
     } else {
-      btnMatch.textContent = "FLIRT";   // the move evolves
       await promptAction();
     }
   }

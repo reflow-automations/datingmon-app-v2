@@ -494,7 +494,9 @@ body {
 .questbox__line  { font-size: 3cqw; margin-bottom: 3.2cqw; color: #e6dcff; }
 .questbox__obj   { font-size: 3.4cqw; line-height: 1.7; margin-bottom: 2.6cqw; color: #fff; text-shadow: 1px 1px 0 rgba(0,0,0,.45); }
 .questbox__obj:last-child { margin-bottom: 0; }
-.questbox__addr  { font-size: 2.4cqw; color: #cdbff0; margin-top: 3.5cqw; text-align: center; letter-spacing: .3px; }
+.questbox__addr  { font-size: 2.8cqw; margin-top: 3.5cqw; text-align: center; letter-spacing: .3px; }
+.questbox__maps  { color: #8fd0ff; text-decoration: underline; }
+.questbox__maps:active { opacity: .7; }
 .quest__footer { font-size: 3cqw; color: #ffb0d0; animation: blink 1.2s steps(2) infinite; }
 .btn--again { background: rgba(255,255,255,.12); font-size: 2.8cqw; padding: 2.8cqw 6cqw; border-color: rgba(255,255,255,.4); }
 
