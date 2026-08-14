@@ -286,6 +286,29 @@ body::before {
 .stealers .btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; }
 .stealers .btn small { font-weight: 600; color: var(--amber); }
 
+.stealers .btn.is-picked { border-color: currentColor; background: rgba(255,255,255,.14); box-shadow: 0 0 0 1px currentColor inset; }
+.btn--back { flex: none; padding: 17px 20px; font-size: 15px; }
+
+/* ── steen-papier-schaar ──────────────────────────────────── */
+.rps { text-align: center; margin-bottom: 18px; }
+.rps__prompt { font-size: 16px; font-weight: 700; margin: 0 0 16px; }
+.rps__buttons { display: flex; gap: 10px; }
+.rpsbtn {
+  flex: 1;
+  font: inherit; font-weight: 800; font-size: 14px;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 6px 16px;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  transition: transform .12s ease, border-color .12s;
+}
+.rpsbtn:active { transform: scale(.96); }
+.rpsbtn:hover { border-color: var(--cyan); }
+.rpsbtn__icon { font-size: 38px; line-height: 1; }
+
 /* ── onthulling ───────────────────────────────────────────── */
 .reveal { padding: 20px 0 0; }
 .hitcard {
