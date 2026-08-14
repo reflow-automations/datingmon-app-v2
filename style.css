@@ -311,6 +311,7 @@ body::before {
 }
 .verdict--good { border-color: rgba(53,208,127,.55); background: rgba(53,208,127,.12); }
 .verdict--bad  { border-color: rgba(255,84,112,.4); background: rgba(255,84,112,.09); }
+.verdict--neutral { border-color: var(--line); background: rgba(255,255,255,.05); }
 .verdict__icon { font-size: 20px; flex: none; }
 .verdict__text { flex: 1; font-size: 14.5px; }
 .verdict__text strong { display: block; font-size: 16px; }

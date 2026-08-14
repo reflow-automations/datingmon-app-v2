@@ -228,7 +228,7 @@
       if (mine !== loadToken) return;
       if (!info) return songFailed('Dit nummer is nu niet te vinden bij Apple.');
       $('btn-play').disabled = false;
-      setPlayerStatus('Klaar — druk op play. Niemand mag meekijken op je scherm 😉', false);
+      setPlayerStatus('Klaar — druk op play. Titel, artiest en jaar blijven verborgen tot de onthulling.', false);
     }).catch(function () {
       if (mine !== loadToken) return;
       songFailed('Geen verbinding met de muziekdienst.');
@@ -410,9 +410,16 @@
   }
 
   function renderSteal(thieves) {
-    $('steal-intro').innerHTML = '<strong>' + escapeHtml(activePlayer().name) +
-      '</strong> heeft een plek gekozen. Wie denkt het beter te weten? ' +
-      'Stelen kost 1 token — je plaatst de kaart dan in je eigen tijdlijn.';
+    // De keuze van de speler aan de beurt is open — daar baseer je je steel op.
+    var active = activePlayer();
+    var lab = gapLabel(sortedCards(active), S.placement);
+    var keuze = lab[1] ? lab[0] + ' ' + lab[1] : lab[0];
+
+    $('steal-intro').innerHTML = '<strong>' + escapeHtml(active.name) + '</strong> legt de kaart ' +
+      '<strong>' + escapeHtml(keuze) + '</strong> in de eigen tijdlijn. Wie denkt het beter te weten? ' +
+      'Stelen kost 1 token — je plaatst de kaart dan in je eigen tijdlijn. ' +
+      'Let op: heeft ' + escapeHtml(active.name) + ' het gewoon goed, dan blijft de kaart daar ' +
+      'en ben je je token kwijt.';
     var list = $('stealers');
     list.innerHTML = '';
     thieves.forEach(function (p) {
@@ -506,18 +513,26 @@
     list.innerHTML = '';
     var active = activePlayer();
     list.appendChild(verdictRow(
-      active, S.outcome.activeOk,
+      active, S.outcome.activeOk ? 'good' : 'bad',
       S.outcome.activeOk ? 'Goed geplaatst — kaart is van jou.'
                          : 'Zat er naast.'
     ));
 
     if (S.stealer != null) {
       var thief = S.players[S.stealer];
-      var txt = S.outcome.thiefOk
-        ? (S.outcome.activeOk ? 'Ook goed, maar te laat: de kaart blijft bij ' + active.name + '. Token weg.'
-                              : 'Gestolen! De kaart is van jou.')
-        : 'Fout gegokt. Token weg.';
-      list.appendChild(verdictRow(thief, S.outcome.thiefOk && !S.outcome.activeOk, txt));
+      var tone, txt;
+      if (S.outcome.thiefOk && S.outcome.activeOk) {
+        tone = 'neutral';
+        txt = 'Jouw plek klopte ook, maar ' + active.name + ' was aan de beurt en had het goed. ' +
+              'De kaart blijft daar; je token is weg.';
+      } else if (S.outcome.thiefOk) {
+        tone = 'good';
+        txt = 'Gestolen! De kaart is van jou.';
+      } else {
+        tone = 'bad';
+        txt = 'Fout gegokt. Token weg.';
+      }
+      list.appendChild(verdictRow(thief, tone, txt));
     }
 
     var tc = $('tokencheck');
@@ -534,9 +549,11 @@
     renderStrip();
   }
 
-  function verdictRow(player, ok, text) {
-    var li = el('li', 'verdict ' + (ok ? 'verdict--good' : 'verdict--bad'));
-    li.appendChild(el('span', 'verdict__icon', ok ? '✅' : '❌'));
+  var VERDICT_ICON = { good: '✅', bad: '❌', neutral: '➖' };
+
+  function verdictRow(player, tone, text) {
+    var li = el('li', 'verdict verdict--' + tone);
+    li.appendChild(el('span', 'verdict__icon', VERDICT_ICON[tone]));
     var box = el('span', 'verdict__text');
     var name = el('strong', null, player.name);
     name.style.color = player.color;
