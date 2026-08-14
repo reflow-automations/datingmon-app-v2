@@ -99,7 +99,7 @@
 
   /* ══════════ schermen ══════════ */
   function show(name) {
-    ['setup', 'game', 'steal', 'reveal', 'win'].forEach(function (n) {
+    ['setup', 'game', 'steal', 'rps', 'reveal', 'win'].forEach(function (n) {
       $('screen-' + n).classList.toggle('is-active', n === name);
     });
     window.scrollTo(0, 0);
@@ -176,6 +176,8 @@
       current: null,       // deck-index van het klinkende nummer
       placement: null,     // gekozen gat van de speler aan de beurt
       stealer: null,       // speler-id van de dief
+      stealPicks: [],      // iedereen die wil stelen
+      rps: null,           // lopende steen-papier-schaar
       stealPlacement: null,
       claim: false,        // "ik weet titel én artiest"
       claimAnswered: false,
@@ -199,6 +201,8 @@
     S.current = S.deck[S.pos++];
     S.placement = null;
     S.stealer = null;
+    S.stealPicks = [];
+    S.rps = null;
     S.stealPlacement = null;
     S.claim = false;
     S.claimAnswered = false;
@@ -306,7 +310,10 @@
     var cards = sortedCards(player);
 
     for (var i = 0; i <= cards.length; i++) {
-      if (opts.interactive || opts.chosen === i) {
+      // Tussen twee kaarten uit hetzelfde jaar valt niets te kiezen:
+      // die opening bestaat niet.
+      var dood = i > 0 && i < cards.length && card(cards[i - 1]).y === card(cards[i]).y;
+      if (!dood && (opts.interactive || opts.chosen === i)) {
         host.appendChild(makeGap(cards, i, opts));
       }
       if (i < cards.length) host.appendChild(makeCard(cards[i], opts.newCard === cards[i]));
@@ -365,6 +372,7 @@
     $('guessbox').hidden = !guessOn;
     $('guess-claim').checked = !!S.claim;
 
+    $('btn-back-place').hidden = true;
     var btn = $('btn-confirm');
     btn.disabled = S.placement == null;
     btn.textContent = S.placement == null ? 'Kies eerst een plek' : 'Vastleggen ▸';
@@ -420,19 +428,182 @@
       'Stelen kost 1 token — je plaatst de kaart dan in je eigen tijdlijn. ' +
       'Let op: heeft ' + escapeHtml(active.name) + ' het gewoon goed, dan blijft de kaart daar ' +
       'en ben je je token kwijt.';
+    if (!S.stealPicks) S.stealPicks = [];
     var list = $('stealers');
     list.innerHTML = '';
     thieves.forEach(function (p) {
+      var gekozen = S.stealPicks.indexOf(p.id) >= 0;
       var li = el('li');
-      var b = el('button', 'btn btn--ghost');
+      var b = el('button', 'btn btn--ghost' + (gekozen ? ' is-picked' : ''));
       b.type = 'button';
       b.style.color = p.color;
-      b.appendChild(el('span', null, p.name + ' steelt'));
+      b.appendChild(el('span', null, (gekozen ? '✔ ' : '') + p.name + ' wil stelen'));
       b.appendChild(el('small', null, p.tokens + ' token' + (p.tokens > 1 ? 's' : '')));
-      b.onclick = function () { startSteal(p.id); };
+      b.onclick = function () {
+        var i = S.stealPicks.indexOf(p.id);
+        if (i >= 0) S.stealPicks.splice(i, 1); else S.stealPicks.push(p.id);
+        save();
+        renderSteal(thieves);
+      };
       li.appendChild(b);
       list.appendChild(li);
     });
+
+    var go = $('btn-steal-go');
+    var n = S.stealPicks.length;
+    go.textContent = n === 0 ? 'Niemand steelt → onthul het jaar'
+                   : n === 1 ? naam(S.stealPicks[0]) + ' steelt ▸'
+                             : 'Steen-papier-schaar met ' + n + ' spelers ▸';
+  }
+
+  function naam(id) { return S.players[id].name; }
+
+  /** Niemand, één dief, of een shootout tussen meerdere gegadigden. */
+  function stealGo() {
+    var picks = S.stealPicks || [];
+    if (!picks.length) return doReveal();
+    if (picks.length === 1) return startSteal(picks[0]);
+    startRps(picks);
+  }
+
+  /**
+   * Eén stap terug. Alleen vóór de onthulling: daarna ligt het jaar op tafel
+   * en zou terugkeren neerkomen op je antwoord verbeteren.
+   */
+  function goBack() {
+    if (S.phase === 'steal') {
+      S.phase = 'turn';
+      save();
+      show('game');
+      renderGame();
+      return;
+    }
+    if (S.phase === 'rps') {
+      S.rps = null;
+      S.phase = 'steal';
+      save();
+      renderSteal(possibleThieves());
+      show('steal');
+      return;
+    }
+    if (S.phase === 'stealPlace') {
+      S.players[S.stealer].tokens += 1;      // token terug in de pot
+      S.stealer = null;
+      S.stealPlacement = null;
+      S.phase = 'steal';
+      save();
+      renderSteal(possibleThieves());
+      show('steal');
+    }
+  }
+
+  /* ══════════ steen-papier-schaar ══════════ */
+  var RPS = {
+    steen:  { icon: '✊', label: 'Steen',  verslaat: 'schaar' },
+    papier: { icon: '✋', label: 'Papier', verslaat: 'steen' },
+    schaar: { icon: '✌️', label: 'Schaar', verslaat: 'papier' }
+  };
+
+  function startRps(ids) {
+    S.phase = 'rps';
+    S.rps = { spelers: ids.slice(), keuzes: {}, idx: 0, doorgeven: false, ronde: 1 };
+    save();
+    show('rps');
+    renderRps();
+  }
+
+  function renderRps() {
+    var r = S.rps;
+    var klaar = r.idx >= r.spelers.length;
+
+    $('rps-sub').textContent = klaar
+      ? ''
+      : 'Alleen de winnaar mag stelen en betaalt een token. Verliezers houden hun token.' +
+        (r.ronde > 1 ? ' Ronde ' + r.ronde + '.' : '');
+
+    $('rps-pick').hidden = klaar || r.doorgeven;
+    $('rps-pass').hidden = klaar || !r.doorgeven;
+    $('rps-result').innerHTML = '';
+    $('btn-rps-next').hidden = !klaar;
+
+    if (r.doorgeven && !klaar) {
+      $('rps-pass-text').textContent = 'Geef de telefoon aan ' + naam(r.spelers[r.idx]) +
+                                       ' — zonder mee te kijken wat er net gekozen is.';
+      return;
+    }
+    if (!klaar) {
+      $('rps-prompt').textContent = naam(r.spelers[r.idx]) + ', jij kiest. De rest kijkt even weg.';
+      return;
+    }
+    toonRpsUitslag();
+  }
+
+  function rpsKies(sym) {
+    var r = S.rps;
+    r.keuzes[r.spelers[r.idx]] = sym;
+    r.idx++;
+    r.doorgeven = r.idx < r.spelers.length;
+    save();
+    renderRps();
+  }
+
+  function rpsWinnaars() {
+    var r = S.rps;
+    var soorten = [];
+    r.spelers.forEach(function (id) {
+      if (soorten.indexOf(r.keuzes[id]) < 0) soorten.push(r.keuzes[id]);
+    });
+    // Alles gelijk of alle drie de tekens: niemand wint deze ronde.
+    if (soorten.length === 1 || soorten.length === 3) return r.spelers.slice();
+    var wint = RPS[soorten[0]].verslaat === soorten[1] ? soorten[0] : soorten[1];
+    return r.spelers.filter(function (id) { return r.keuzes[id] === wint; });
+  }
+
+  function toonRpsUitslag() {
+    var r = S.rps;
+    var winnaars = rpsWinnaars();
+    var gelijk = winnaars.length === r.spelers.length && r.spelers.length > 1 &&
+                 !(winnaars.length === 1);
+    var list = $('rps-result');
+
+    r.spelers.forEach(function (id) {
+      var p = S.players[id];
+      var keuze = RPS[r.keuzes[id]];
+      var tone = gelijk ? 'neutral' : (winnaars.indexOf(id) >= 0 ? 'good' : 'bad');
+      var li = el('li', 'verdict verdict--' + tone);
+      li.appendChild(el('span', 'verdict__icon', keuze.icon));
+      var box = el('span', 'verdict__text');
+      var nm = el('strong', null, p.name);
+      nm.style.color = p.color;
+      box.appendChild(nm);
+      box.appendChild(document.createTextNode(
+        keuze.label + (gelijk ? '' : (winnaars.indexOf(id) >= 0 ? ' — door!' : ' — uitgeschakeld, token blijft van jou.'))));
+      li.appendChild(box);
+      list.appendChild(li);
+    });
+
+    var btn = $('btn-rps-next');
+    if (gelijk) {
+      $('rps-sub').textContent = 'Gelijkspel! Nog een keer.';
+      btn.textContent = 'Opnieuw ▸';
+      btn.onclick = function () {
+        S.rps = { spelers: r.spelers.slice(), keuzes: {}, idx: 0, doorgeven: false, ronde: r.ronde + 1 };
+        save();
+        renderRps();
+      };
+    } else if (winnaars.length === 1) {
+      $('rps-sub').textContent = naam(winnaars[0]) + ' mag stelen.';
+      btn.textContent = naam(winnaars[0]) + ' steelt ▸';
+      btn.onclick = function () { startSteal(winnaars[0]); };
+    } else {
+      $('rps-sub').textContent = 'Nog ' + winnaars.length + ' spelers over.';
+      btn.textContent = 'Volgende ronde ▸';
+      btn.onclick = function () {
+        S.rps = { spelers: winnaars, keuzes: {}, idx: 0, doorgeven: false, ronde: r.ronde + 1 };
+        save();
+        renderRps();
+      };
+    }
   }
 
   function startSteal(playerId) {
@@ -460,6 +631,7 @@
       onPick: function (i) { S.stealPlacement = i; renderStealPlacement(); save(); }
     });
 
+    $('btn-back-place').hidden = false;
     var btn = $('btn-confirm');
     btn.disabled = S.stealPlacement == null;
     btn.textContent = S.stealPlacement == null ? 'Kies een plek' : 'Onthul het jaar ▸';
@@ -705,6 +877,9 @@
     } else if (S.phase === 'steal') {
       renderSteal(possibleThieves());
       show('steal');
+    } else if (S.phase === 'rps' && S.rps) {
+      show('rps');
+      renderRps();
     } else if (S.phase === 'stealPlace') {
       show('game');
       renderStealPlacement();
@@ -786,7 +961,18 @@
     $('guess-claim').addEventListener('change', function () { S.claim = this.checked; save(); });
 
     // stelen
-    $('btn-noSteal').addEventListener('click', doReveal);
+    $('btn-steal-go').addEventListener('click', stealGo);
+    document.querySelectorAll('[data-rps]').forEach(function (b) {
+      b.addEventListener('click', function () { rpsKies(this.dataset.rps); });
+    });
+    ['btn-back-steal', 'btn-back-rps', 'btn-back-place'].forEach(function (id) {
+      $(id).addEventListener('click', goBack);
+    });
+    $('btn-rps-pass').addEventListener('click', function () {
+      S.rps.doorgeven = false;
+      save();
+      renderRps();
+    });
 
     // onthulling
     $('btn-guess-yes').addEventListener('click', function () { answerClaim(true); });
