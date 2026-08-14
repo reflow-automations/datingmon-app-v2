@@ -1,155 +1,244 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b3d2e" />
-  <title>A Wild Date?! · ROGIER Studios</title>
-  <meta name="description" content="A wild ROGIER appeared! A tiny retro warm-up for our date. 💘" />
-
-  <!-- Link preview for sharing -->
-  <meta property="og:title" content="A WILD DATE?!" />
-  <meta property="og:description" content="A wild ROGIER appeared! Tap to battle. (The date's already locked in.)" />
-  <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#120b1f" />
+<title>HITSTER · het muziek-tijdlijnspel</title>
+<meta name="description" content="Hitster voor je eigen groep: luister het nummer, raad het jaar en bouw je tijdlijn. Geen kaartjes nodig, alleen dit scherm." />
+<meta property="og:title" content="HITSTER" />
+<meta property="og:description" content="Luister, raad het jaar, bouw je tijdlijn. Speel met de hele groep op één scherm." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💿</text></svg>" />
+<link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <!-- Mute / unmute (chiptune SFX are generated on first tap, never autoplay) -->
-  <button id="sound-toggle" class="sound-toggle" aria-label="Toggle sound" title="Sound on/off">♪</button>
 
-  <main class="device" role="application" aria-label="Retro match battle game">
-    <div class="screen" id="screen">
+<div class="app" id="app">
 
-      <!-- ===================== STATE 1: TITLE ===================== -->
-      <section class="state state--title is-active" id="state-title" aria-hidden="false">
-        <p class="title__studio">★ ROGIER STUDIOS 2026 ★</p>
+  <!-- ══════════════ SETUP ══════════════ -->
+  <section class="screen is-active" id="screen-setup">
+    <header class="logo">
+      <h1 class="logo__word">HITSTER</h1>
+      <p class="logo__sub">luister · raad het jaar · bouw je tijdlijn</p>
+    </header>
 
-        <div class="title__art" aria-hidden="true">
-          <div class="title__ball"><span class="title__ball-btn"></span></div>
-        </div>
-
-        <div class="title__logo">
-          <span class="title__logo-top">A WILD</span>
-          <span class="title__logo-big">DATE<span class="title__bang">?!</span></span>
-        </div>
-
-        <button class="btn btn--start" id="btn-start">START</button>
-        <p class="title__hint">▼ PRESS START</p>
-        <p class="title__credit">a game for <span id="title-name">you</span></p>
-      </section>
-
-      <!-- ===================== STATE 2: BATTLE ===================== -->
-      <section class="state state--battle" id="state-battle" aria-hidden="true">
-        <div class="battlefield" id="battlefield">
-          <div class="bg-sky"></div>
-          <div class="bg-trees" aria-hidden="true"></div>
-          <div class="bg-grass"></div>
-
-          <!-- Opponent: Wild ROGIER (top-right, front view) -->
-          <div class="status status--foe" id="status-foe">
-            <div class="status__top">
-              <span class="status__name">ROGIER</span>
-              <span class="status__gender status__gender--m">♂</span>
-              <span class="status__lvl">Lv200</span>
-            </div>
-            <div class="status__bar">
-              <span class="status__hplabel">HP</span>
-              <div class="hpbar__track"><div class="hpbar__fill" id="hp-foe"></div></div>
-            </div>
-          </div>
-
-          <div class="platform platform--foe"></div>
-          <div class="sprite sprite--foe" id="sprite-foe" aria-hidden="true"></div>
-
-          <!-- Player (bottom-left, back view) -->
-          <div class="sprite sprite--player" id="sprite-player" aria-hidden="true"></div>
-          <div class="platform platform--player"></div>
-
-          <div class="status status--player" id="status-player">
-            <div class="status__top">
-              <span class="status__name" id="player-name-box">TRAINER</span>
-              <span class="status__gender status__gender--f">♀</span>
-              <span class="status__lvl">Lv100</span>
-            </div>
-            <div class="status__bar">
-              <span class="status__hplabel">HP</span>
-              <div class="hpbar__track"><div class="hpbar__fill" id="hp-player"></div></div>
-            </div>
-            <div class="status__num"><span id="hp-player-num">999</span>/&#8202;999</div>
-          </div>
-        </div>
-
-        <!-- Dialogue + menu -->
-        <div class="dialogue dialogue--battle" id="dialogue" aria-live="polite">
-          <span id="dialogue-text"></span><span class="dialogue__cursor" id="dialogue-cursor">▼</span>
-        </div>
-
-        <div class="menu" id="menu" aria-hidden="true">
-          <button class="btn btn--action act-match" data-action="match">FLIRT</button>
-          <button class="btn btn--action act-ghost" data-action="ghost">OVERTHINK</button>
-          <button class="btn btn--action act-compliment" data-action="compliment">COMPLIMENT</button>
-          <button class="btn btn--action act-run"   data-action="run">COLD FEET</button>
-        </div>
-      </section>
-
-      <!-- ===================== STATE 3: GAME OVER ===================== -->
-      <section class="state state--over" id="state-over" aria-hidden="true">
-        <p class="over__title">GAME OVER</p>
-        <p class="over__sub">Cold feet got the better of you...</p>
-        <div class="broken-heart" aria-hidden="true">💔</div>
-        <div class="over__buttons" id="over-buttons">
-          <button class="btn btn--retry" id="btn-retry">RETRY</button>
-          <button class="btn btn--pass" id="btn-pass">PASS</button>
-        </div>
-        <p class="over__hint" id="over-hint">▼ there's only one way out of this</p>
-      </section>
-
-      <!-- ===================== STATE 4: LEVEL UP ===================== -->
-      <section class="state state--levelup" id="state-levelup" aria-hidden="true">
-        <p class="lvl__header" id="lvl-header">LEVELED UP!</p>
-
-        <div class="exp">
-          <span class="exp__label">EXP</span>
-          <div class="exp__track"><div class="exp__fill" id="exp-fill"></div></div>
-        </div>
-        <p class="lvl__lvtext" id="lvl-lvtext">Lv.100 &nbsp;▸&nbsp; Lv.101</p>
-
-        <ul class="lvl__stats" id="lvl-stats"><!-- rows injected by game.js --></ul>
-
-        <div class="skillbox" id="skillbox">
-          <p>✦ NEW SKILL UNLOCKED ✦</p>
-          <p class="skillbox__skill">FIRST DATE</p>
-        </div>
-        <p class="lvl__continue" id="lvl-continue">▼ Tap to continue</p>
-      </section>
-
-      <!-- ===================== STATE 5: FINAL QUEST ===================== -->
-      <section class="state state--quest" id="state-quest" aria-hidden="true">
-        <p class="quest__header" id="quest-header">ROGIER joined your party!</p>
-        <div class="sprite sprite--foe quest__sprite" aria-hidden="true"></div>
-        <div class="questbox">
-          <p class="questbox__title">✦ IT'S OFFICIAL ✦</p>
-          <p class="questbox__line">The date:</p>
-          <div id="quest-objs"></div>
-          <p class="questbox__addr" id="quest-addr"></p>
-        </div>
-        <p class="quest__footer" id="quest-footer">[ TO BE CONTINUED... ]</p>
-        <button class="btn btn--again" id="btn-again">↺ PLAY AGAIN</button>
-      </section>
-
-      <!-- overlays -->
-      <div class="flash" id="flash" aria-hidden="true"></div>
-      <div class="fade" id="fade" aria-hidden="true"></div>
-      <div class="sparkles" id="sparkles" aria-hidden="true"></div>
-      <div class="scanlines" aria-hidden="true"></div>
+    <div class="panel">
+      <h2 class="panel__title">Spelers</h2>
+      <ul class="players" id="setup-players"></ul>
+      <form class="addplayer" id="add-player-form" autocomplete="off">
+        <input class="input" id="add-player-input" placeholder="Naam speler" maxlength="14" aria-label="Naam speler" />
+        <button class="btn btn--add" type="submit">+</button>
+      </form>
+      <p class="hint" id="players-hint">Minimaal 2 spelers, maximaal 10.</p>
     </div>
-  </main>
 
-  <script src="./game.js" defer></script>
+    <div class="panel">
+      <h2 class="panel__title">Spelregels &amp; instellingen</h2>
+
+      <label class="setting" for="set-target">
+        <span class="setting__label">Kaarten om te winnen</span>
+        <select class="select" id="set-target">
+          <option value="6">6 · kort (±20 min)</option>
+          <option value="8">8 · normaal</option>
+          <option value="10" selected>10 · officieel (±45 min)</option>
+          <option value="12">12 · lang</option>
+        </select>
+      </label>
+
+      <label class="setting" for="set-era">
+        <span class="setting__label">Muziekperiode</span>
+        <select class="select" id="set-era">
+          <option value="all" selected>Alles (1955 – 2024)</option>
+          <option value="1955-1979">Klassiekers · 1955 – 1979</option>
+          <option value="1980-1999">80's &amp; 90's</option>
+          <option value="2000-2024">2000 – nu</option>
+          <option value="1980-2010">De brede middenmoot · 1980 – 2010</option>
+        </select>
+      </label>
+
+      <label class="setting setting--switch">
+        <span class="setting__label">Tokens: stelen &amp; titel raden
+          <small class="setting__note">Zet uit voor het simpele spel: alleen jaartallen plaatsen.</small>
+        </span>
+        <input type="checkbox" id="set-tokens" class="switch" checked />
+      </label>
+
+      <label class="setting setting--switch">
+        <span class="setting__label">Alleen Nederlandse acts
+          <small class="setting__note">Klein deck (12 nummers) — leuk als borrelrondje.</small>
+        </span>
+        <input type="checkbox" id="set-nl" class="switch" />
+      </label>
+
+      <p class="deckcount" id="deck-count"></p>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel__title">Werkt het geluid?</h2>
+      <button class="btn btn--ghost btn--wide" id="btn-soundtest" type="button">🔊 Speel een testnummer</button>
+      <p class="hint" id="soundtest-result">Doe dit even vóór de eerste beurt: zet het volume op een fijn niveau en zorg dat je telefoon niet op stil staat.</p>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn--ghost" id="btn-rules">Spelregels</button>
+      <button class="btn btn--primary btn--big" id="btn-start" disabled>Start het spel</button>
+    </div>
+    <button class="btn btn--link" id="btn-resume" hidden>▸ Verder met het opgeslagen spel</button>
+    <p class="foot">Muziek komt van de officiële 30-seconden previews van Apple/iTunes. Geen account nodig, wel internet.</p>
+  </section>
+
+  <!-- ══════════════ SPEL ══════════════ -->
+  <section class="screen" id="screen-game">
+    <header class="topbar">
+      <button class="iconbtn" id="btn-menu" aria-label="Menu">☰</button>
+      <div class="turnbadge" id="turn-badge">
+        <span class="turnbadge__dot" id="turn-dot"></span>
+        <span class="turnbadge__name" id="turn-name">—</span>
+      </div>
+      <button class="iconbtn" id="btn-scores" aria-label="Stand">🏆</button>
+    </header>
+
+    <!-- speler-strip -->
+    <div class="strip" id="player-strip"></div>
+
+    <!-- muziekspeler -->
+    <div class="player" id="player">
+      <div class="player__disc" id="disc" aria-hidden="true"><span class="player__hole"></span></div>
+      <div class="player__body">
+        <p class="player__status" id="player-status">Klaar om te spelen</p>
+        <div class="player__controls">
+          <button class="btn btn--play" id="btn-play">▶ Speel het nummer</button>
+          <button class="btn btn--icon" id="btn-replay" title="Opnieuw vanaf het begin" hidden>⟲</button>
+        </div>
+        <div class="progress" id="progress" hidden><div class="progress__bar" id="progress-bar"></div></div>
+        <p class="player__error" id="player-error" hidden></p>
+      </div>
+    </div>
+
+    <!-- tijdlijn + plaatsen -->
+    <div class="stage" id="stage">
+      <p class="stage__hint" id="stage-hint">Waar hoort dit nummer in je tijdlijn?</p>
+      <div class="timeline-wrap">
+        <div class="timeline" id="timeline"></div>
+      </div>
+    </div>
+
+    <!-- token-gok -->
+    <div class="guessbox" id="guessbox" hidden>
+      <label class="setting setting--switch setting--compact">
+        <span class="setting__label">Ik weet titel <em>én</em> artiest
+          <small class="setting__note">Goed geraden = 1 token erbij.</small>
+        </span>
+        <input type="checkbox" id="guess-claim" class="switch" />
+      </label>
+    </div>
+
+    <div class="actions actions--sticky">
+      <button class="btn btn--primary btn--big" id="btn-confirm" disabled>Kies eerst een plek</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ STELEN ══════════════ -->
+  <section class="screen" id="screen-steal">
+    <header class="logo logo--small"><h1 class="logo__word">STELEN?</h1></header>
+    <p class="steal__intro" id="steal-intro"></p>
+    <ul class="stealers" id="stealers"></ul>
+    <div class="actions actions--sticky">
+      <button class="btn btn--primary btn--big" id="btn-noSteal">Niemand steelt → onthul het jaar</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ ONTHULLING ══════════════ -->
+  <section class="screen" id="screen-reveal">
+    <div class="reveal" id="reveal">
+      <div class="hitcard" id="hitcard">
+        <img class="hitcard__art" id="reveal-art" alt="" hidden />
+        <span class="hitcard__year" id="reveal-year">—</span>
+        <span class="hitcard__title" id="reveal-title">—</span>
+        <span class="hitcard__artist" id="reveal-artist">—</span>
+      </div>
+      <ul class="verdicts" id="verdicts"></ul>
+      <div class="tokencheck" id="tokencheck" hidden>
+        <p class="tokencheck__q" id="tokencheck-q">Had je titel én artiest goed?</p>
+        <div class="tokencheck__btns">
+          <button class="btn btn--ghost" id="btn-guess-no">Nee</button>
+          <button class="btn btn--good" id="btn-guess-yes">Ja, +1 token</button>
+        </div>
+      </div>
+    </div>
+    <div class="actions actions--sticky">
+      <button class="btn btn--primary btn--big" id="btn-next">Volgende speler ▸</button>
+    </div>
+  </section>
+
+  <!-- ══════════════ WINNAAR ══════════════ -->
+  <section class="screen" id="screen-win">
+    <canvas class="confetti" id="confetti"></canvas>
+    <div class="win">
+      <p class="win__label">🏆 Winnaar</p>
+      <h1 class="win__name" id="win-name">—</h1>
+      <p class="win__sub" id="win-sub"></p>
+      <div class="win__timeline" id="win-timeline"></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn--ghost" id="btn-win-scores">Alle tijdlijnen</button>
+      <button class="btn btn--primary btn--big" id="btn-again">Nog een keer</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ══════════════ OVERLAYS ══════════════ -->
+<div class="sheet" id="sheet-scores" hidden>
+  <div class="sheet__inner">
+    <header class="sheet__head"><h2>Stand</h2><button class="iconbtn" data-close-sheet aria-label="Sluiten">✕</button></header>
+    <div class="sheet__body" id="scores-body"></div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet-menu" hidden>
+  <div class="sheet__inner">
+    <header class="sheet__head"><h2>Menu</h2><button class="iconbtn" data-close-sheet aria-label="Sluiten">✕</button></header>
+    <div class="sheet__body">
+      <button class="btn btn--ghost btn--wide" id="btn-menu-rules">Spelregels</button>
+      <button class="btn btn--ghost btn--wide" id="btn-skip-song">Dit nummer overslaan</button>
+      <button class="btn btn--ghost btn--wide" id="btn-sound">Geluidseffecten: aan</button>
+      <button class="btn btn--danger btn--wide" id="btn-quit">Spel stoppen</button>
+      <p class="hint" id="menu-info"></p>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet-rules" hidden>
+  <div class="sheet__inner">
+    <header class="sheet__head"><h2>Spelregels</h2><button class="iconbtn" data-close-sheet aria-label="Sluiten">✕</button></header>
+    <div class="sheet__body prose">
+      <h3>Het doel</h3>
+      <p>Als eerste <strong id="rules-target">10</strong> kaarten op een kloppende tijdlijn hebben.</p>
+      <h3>Je beurt</h3>
+      <ol>
+        <li>Druk op <em>Speel het nummer</em>. Je hoort 30 seconden — titel, artiest en jaar blijven verborgen.</li>
+        <li>Kies waar het nummer in <em>jouw</em> tijdlijn hoort: ervoor, ertussen of erna.</li>
+        <li>Denk je titel én artiest te weten? Zet dat vinkje aan vóór je bevestigt.</li>
+        <li>Klopt de plek? De kaart is van jou. Fout? De kaart gaat op de stapel.</li>
+      </ol>
+      <h3>Tokens</h3>
+      <p>Iedereen begint met 1 token, je kunt er maximaal 3 hebben.</p>
+      <ul>
+        <li><strong>Verdienen:</strong> titel én artiest goed geraden in je eigen beurt = 1 token. De groep beslist of het telt.</li>
+        <li><strong>Stelen:</strong> is iemand anders aan de beurt en denk jij het beter te weten? Geef 1 token uit en plaats de kaart in <em>jouw</em> tijdlijn. Heeft de speler aan de beurt het goed, dan houdt die de kaart en ben je je token kwijt. Heeft die het fout en jij goed, dan is de kaart van jou.</li>
+      </ul>
+      <h3>Gelijke jaren</h3>
+      <p>Twee nummers uit hetzelfde jaar mogen in willekeurige volgorde naast elkaar staan — beide plekken zijn goed.</p>
+      <h3>Geen geluid?</h3>
+      <p>De previews komen van Apple. Zet je telefoon van stil, controleer je internet, of sla het nummer over via het menu (☰).</p>
+    </div>
+  </div>
+</div>
+
+<script src="./js/deck.js"></script>
+<script src="./js/music.js"></script>
+<script src="./js/game.js"></script>
 </body>
 </html>
