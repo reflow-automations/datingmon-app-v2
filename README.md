@@ -43,13 +43,14 @@ staan — beide plekken worden goedgekeurd.
 - **Muziekperiode** — alles, klassiekers, 80's & 90's, 2000-nu of 1980-2010.
 - **Tokens uit** — dan is het puur jaartallen plaatsen. Fijn met kinderen of
   als je snel wilt spelen.
-- **Alleen Nederlandse acts** — klein deck van 12 nummers, leuk als rondje.
+- **Alleen Nederlandse acts** — 62 nummers, een volwaardig potje op zichzelf.
 
 ## De muziek
 
 Elk nummer speelt als de officiële 30-seconden preview van Apple/iTunes.
 Er is geen account of API-sleutel nodig; de app zoekt de preview zelf op via
-de iTunes Search API (JSONP, dus geen CORS-gedoe) en onthoudt hem 30 dagen in
+de iTunes Search API (JSONP, met een gewone fetch als terugval) en onthoudt hem
+30 dagen in
 `localStorage`.
 
 Twee routes naar het geluid, in deze volgorde:
@@ -68,9 +69,9 @@ beurt begint.
 
 ## Het deck
 
-184 nummers van 1955 tot 2024, verdeeld over alle decennia, met een handvol
-Nederlandse klassiekers (Golden Earring, Doe Maar, Guus Meeuwis, Anouk, BLØF,
-Duncan Laurence …).
+234 nummers van 1955 tot 2024, verdeeld over alle decennia. Daarvan zijn er 62
+van Nederlandse acts — genoeg voor een volwaardig potje met alleen Nederlandse
+muziek, van Shocking Blue en Doe Maar tot S10 en Joost Klein.
 
 Zelf nummers toevoegen? Eén regel in `js/deck.js`:
 
@@ -86,7 +87,7 @@ Nederlandse deck.
 
 - `index.html` — alle schermen (opzet, beurt, stelen, onthulling, winnaar)
 - `style.css` — donker thema, gebouwd voor een telefoon die rondgaat
-- `js/deck.js` — de 184 nummers
+- `js/deck.js` — de 234 nummers
 - `js/music.js` — previews opzoeken, cachen en afspelen
 - `js/game.js` — beurten, tijdlijnen, tokens, stelen, winnen
 - `vercel.json` — rewrite voor schone URL's
